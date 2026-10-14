@@ -1,0 +1,9 @@
+[
+  "tests/test_orders_api.py::test_get_existing_order",
+  "tests/test_orders_api.py::test_get_missing_order_returns_404",
+  "tests/test_tools.py::test_invalid_id_never_calls_the_api",
+  "tests/test_tools.py::test_order_found",
+  "tests/test_tools.py::test_order_not_found",
+  "tests/test_tools.py::test_server_error_is_returned_as_text",
+  "tests/test_tools.py::test_timeout_is_returned_as_text"
+]
