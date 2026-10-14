@@ -11,6 +11,13 @@ def test_gemini_without_key_gives_clear_error():
         build_llm(settings)
 
 
+def test_gemini_with_empty_key_gives_clear_error():
+    # Caso reale: nel .env c'è "GOOGLE_API_KEY=" senza valore, che arriva come stringa vuota.
+    settings = Settings(_env_file=None, llm_provider="gemini", google_api_key="")
+    with pytest.raises(MissingApiKeyError, match="GOOGLE_API_KEY"):
+        build_llm(settings)
+
+
 def test_model_name_defaults_per_provider():
     assert Settings(_env_file=None, llm_provider="gemini", llm_model=None).model_name == "gemini-3.5-flash-lite"
     assert Settings(_env_file=None, llm_provider="openai", llm_model=None).model_name == "gpt-4o-mini"

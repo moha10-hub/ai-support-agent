@@ -7,6 +7,7 @@
   "tests/test_agent.py::test_agent_stops_when_model_loops_forever",
   "tests/test_agent.py::test_agent_uses_tool_then_answers",
   "tests/test_agent.py::test_content_to_text_handles_string_and_blocks",
+  "tests/test_llm.py::test_gemini_with_empty_key_gives_clear_error",
   "tests/test_llm.py::test_gemini_without_key_gives_clear_error",
   "tests/test_llm.py::test_model_name_defaults_per_provider",
   "tests/test_orders_api.py::test_get_existing_order",
