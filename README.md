@@ -1,84 +1,36 @@
 # ai-support-agent
 
-A customer-support AI agent built with **LangGraph**. It answers order-status questions by calling a tool against a REST API instead of making answers up.
+Un agente AI di assistenza clienti realizzato con LangGraph. Risponde alle domande sullo stato degli ordini interrogando una REST API tramite un tool invece di inventare le risposte.
 
-> **Status: work in progress.** What works today is listed below; the roadmap shows what comes next.
+**Stato: lavoro in corso.** Ciò che funziona oggi è elencato di seguito; la roadmap mostra i passi successivi.
 
-## What it does today
+## Cosa fa oggi
 
-- **Agent loop with LangGraph:** model → tool → model, until the model has an answer
-- **Tool calling:** `get_order_status` queries a mock Orders REST API (FastAPI)
-- **Free LLM by default:** Google Gemini (AI Studio free tier); OpenAI is optional via `LLM_PROVIDER=openai`
-- **CLI chat:** ask one question or chat interactively
-- **14 tests** that need no network and no API key (fake LLM, mocked HTTP)
+- **Ciclo dell'agente con LangGraph:** modello → tool → modello, finché il modello non ha una risposta
+- **Chiamata ai tool:** `get_order_status` interroga una REST API Orders fittizia (FastAPI)
+- **LLM gratuito di default:** Google Gemini (piano gratuito di AI Studio); OpenAI è opzionale tramite `LLM_PROVIDER=openai`
+- **CLI chat:** fai una domanda singola oppure chatta in modo interattivo
+- **14 test** che non richiedono connessione di rete né API key (LLM simulato, HTTP con mock)
 
-## Design choices
+## Scelte di progettazione
 
-- **LLM-generated arguments are untrusted:** order IDs must be digits only, so a value like `../admin` never reaches the URL
-- **Tool errors are returned as text, not raised:** the agent can explain a failure to the customer
-- **Minimal data:** the tool returns only what is needed to answer (no customer name)
-- **Step limit:** `MAX_GRAPH_STEPS` stops runaway tool loops (covered by a test)
-- **Prompt hardening:** the system prompt tells the model that tool output is data, not instructions
-- **Testable by design:** tool logic is separate from the decorator, and the agent takes the LLM as a parameter
+- **Gli argomenti generati dall'LLM non sono affidabili:** gli ID ordine devono contenere solo cifre, così valori come `../admin` non raggiungono mai l'URL
+- **Gli errori del tool vengono restituiti come testo, non lanciati come eccezioni:** l'agente può spiegare il fallimento al cliente
+- **Dati minimi:** il tool restituisce solo ciò che serve per rispondere (nessun nome cliente)
+- **Limite di passaggi:** `MAX_GRAPH_STEPS` interrompe i cicli infiniti dei tool (verificato da un test)
+- **Prompt hardening:** il prompt di sistema specifica al modello che l'output del tool è costituito da dati, non da istruzioni
+- **Progettato per essere testabile:** la logica del tool è separata dal decoratore e l'agente accetta l'LLM come parametro
 
-## Architecture
+## Architettura
 
-```
-question → agent node (LLM) ⇄ tools node (get_order_status → Orders API)
-                  ↓
-               answer
-```
-
-## Quick start
-
-Tested on Python 3.14.
-
-```powershell
-git clone https://github.com/moha10-hub/ai-support-agent.git
-cd ai-support-agent
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-
-Get a free API key at https://aistudio.google.com/apikey and put it in `.env` after `GOOGLE_API_KEY=`.
-
-Terminal 1, the mock Orders API:
-
-```powershell
-python -m uvicorn orders_api.main:app --port 8001
-```
-
-Terminal 2, the agent (it answers in Italian):
-
-```powershell
-python -m app.cli "Dov'è il mio ordine 1001?"
-```
-
-Demo orders: `1001` shipped, `1002` in preparation, `1003` delivered.
-
-## Tests
-
-```powershell
-python -m pytest -q
-```
-
-## Configuration (`.env`)
-
-| Variable | Meaning | Default |
-|---|---|---|
-| `LLM_PROVIDER` | `gemini` or `openai` | `gemini` |
-| `GOOGLE_API_KEY` | Free key from Google AI Studio | – |
-| `LLM_MODEL` | Model name (empty = provider default) | `gemini-3.5-flash-lite` |
-| `ORDERS_API_URL` | Orders API address | `http://127.0.0.1:8001` |
-
-Note: on the Gemini free tier, Google may use prompts to improve its products, so use only fake data.
-
-## Roadmap
-
-- [ ] RAG tool for FAQs and policies (using my [RAG backend](https://github.com/moha10-hub/rag-fastapi-backend))
-- [ ] Conversation memory
-- [ ] Retry and error handling for provider rate limits
-- [ ] Human-in-the-loop approval before creating support tickets
-- [ ] Docker Compose setup
+```mermaid
+flowchart LR
+    U["Cliente"] --> CLI["CLI: python -m app.cli"]
+    CLI --> A["Nodo agente (LLM)"]
+    A --> C{"Tool necessario?"}
+    C -- sì --> T["Nodo tool: get_order_status"]
+    T --> API["Orders API (mock, FastAPI)"]
+    API --> T
+    T --> A
+    C -- no --> R["Risposta finale"]
+    R --> U
